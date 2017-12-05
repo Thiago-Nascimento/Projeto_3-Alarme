@@ -2,20 +2,14 @@
 #include <LiquidCrystal.h>
 //#include <utility/logging.h>
 #include "Teclado.h"
-#include "BlynkInterface.h"
-//#include "sms.h"
+#include "sms.h"
 
-#include "RestClient.h"
-#include <UIPEthernet.h>
-
-//int LED = 9 ;
-
+int LED = 9 ;
 
 AsyncDelay delay_10s;
 AsyncDelay delayLedBlink;
 AsyncDelay delayLCD;
 LiquidCrystal lcd(31, 33, 35, 37, 39, 41);
-EthernetClient ethclient;
 
 bool digitandoSenha = false;
 bool estadoAlarme = false;
@@ -23,12 +17,12 @@ bool estadoAlarme = false;
 String senhaDigitada;
 String senha = "1577";
 
-const int ledVerde = A4;
-const int ledAmarelo = 45;
-const int receptor = A5;
-const int buzzer = 9;
+const byte ledVerde = A4;
+const byte ledAmarelo = 45;
+const byte receptor = A5;
+const byte buzzer = 9;
 
-int valorSensor = 0;
+byte valorSensor = 0;
 
 #define ATIVADO 1
 #define ATIVANDO 2
@@ -37,27 +31,13 @@ int valorSensor = 0;
 #define DISPARADO 5
 #define Luz_Fundo  43
 
-
 byte estado = DESATIVADO;
 
 boolean yellowLed = LOW;
 
-const byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x21 };
-
-
+const byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xF1, 0x21 };
 
 char aux[1] = {'.'};
-
-RestClient client = RestClient("192.168.3.186", 3000, ethclient);
-const char* sid = "ACa9e8b4488a86ad0105ba30f525046f15";
-const char* token = "c245f983935f9cd6a8b9348b8e171217";
-const char* to = "5511999191645";//
-const char* from = "14352362364";
-
-String response = "";
-String parametros = "sid=";
-
-int smsEnviado;
 
 void setup() {
   Serial.begin(9600);
@@ -75,8 +55,6 @@ void setup() {
   delay_10s.start(10000, AsyncDelay::MILLIS);
   delayLedBlink.start(500, AsyncDelay::MILLIS);
 
-  Blynk.begin(auth);
-
   if (Ethernet.begin(mac))
   {
     Serial.println(F("Conectado via DHCP"));
@@ -84,6 +62,7 @@ void setup() {
   }
   else
   {
+    Serial.print("erro        ");
     escreveLCD("Erro ao ", "Conectar");
     delay(1000);
   }
@@ -105,7 +84,6 @@ void setup() {
   parametros.concat("&body=SUA CASA FOI INVADIDA");
 
   Serial.println(parametros);
-
 }
 
 void loop() {
@@ -113,29 +91,24 @@ void loop() {
   valorSensor = digitalRead(receptor);
   int flag1;
   boolean flag2 = false;
-  byte comandoBlynkAnterior = comandoBlynk;
-  Blynk.run();
-  if (comandoBlynk != comandoBlynkAnterior)
-    estadoBlynk = comandoBlynk;
-  else
-    estadoBlynk = 0;
 
   switch (estado) {
     case ATIVADO:
-      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3 || estadoBlynk == DESATIVADO) {
+      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) {
         alarmeDesativado();
       }
       if (valorSensor == 1) {
         alarmePreDisparado();
       }
       break;
+      
     case ATIVANDO:
       flag1 = verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha);
       if (flag1 == 2) {
         flag2 = true;
       }
 
-      if (flag1 == 3 || estadoBlynk == DESATIVADO) {
+      if (flag1 == 3) {
         alarmeDesativado();
       }
       if (!flag2 && delayLedBlink.isExpired()) {
@@ -153,40 +126,36 @@ void loop() {
         digitalWrite(ledAmarelo, !digitalRead(ledAmarelo));
         delayLedBlink.repeat();
       }
-      if (delay_10s.isExpired() || estadoBlynk == ATIVADO) {
+      if (delay_10s.isExpired()) {
         alarmeAtivado();
       }
       break;
 
     case DESATIVADO:
-      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3 || estadoBlynk == ATIVADO) {
+      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) {
         alarmeAtivando();
         flag2 = false;
       }
-      if (estadoBlynk == ATIVADO)
-        delay_10s.expire();
       break;
+    
     case PREALARME:
       if (delay_10s.isExpired()) {
         alarmeDisparado();
         Serial.println(F("Executou função alarmeDisparado()"));
       }
-      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3 || estadoBlynk == DESATIVADO) {
+      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) {
         alarmeDesativado();
       }
-
       break;
+    
     case DISPARADO:
-
-
-      Serial.println(F("Estado Alarme Disparado"));
 
       if (delayLedBlink.isExpired()) {
         digitalWrite(ledVerde, !digitalRead(ledVerde));
         digitalWrite(ledAmarelo, !digitalRead(ledVerde));
         delayLedBlink.repeat();
       }
-      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3 || estadoBlynk == DESATIVADO) {
+      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) {
         alarmeDesativado();
       }
       break;
@@ -212,6 +181,7 @@ boolean estadoPorta() {
     return false;
   }
 }
+
 /*Alarme desativado*/
 void identificaInvasao(boolean estadoPorta, boolean estadoAlarme) {
 
@@ -224,6 +194,7 @@ void identificaInvasao(boolean estadoPorta, boolean estadoAlarme) {
     Serial.println(F("Entrada autorizada"));
   }
 }
+
 /*Alarme desativado*/
 void alarmeDesativado() {
   delayLCD.expire();
@@ -233,20 +204,13 @@ void alarmeDesativado() {
   Serial.println(F("Alarme desativado."));
   estado = DESATIVADO;
   digitalWrite(ledVerde, LOW);
+  digitalWrite(ledAmarelo, LOW);
   smsEnviado = 0;
   noTone(buzzer);
 }
+
 /*Alarme Ativado*/
 void alarmeAtivado() {
-  if (smsEnviado == 0)
-  {
-    int statusCode = client.post("/sms", parametros.c_str(), &response);
-    Serial.print(F("Status da resposta: "));
-    Serial.println(statusCode);
-    Serial.print(F("Resposta do servidor: "));
-    Serial.println(response);
-    smsEnviado = 1;
-  }
   estado = ATIVADO;
   delayLCD.expire();
   delayLCD.repeat();
@@ -256,6 +220,7 @@ void alarmeAtivado() {
   digitalWrite(ledAmarelo, LOW);
   digitalWrite(ledVerde, HIGH);
 }
+
 /*Alarme Ativando*/
 void alarmeAtivando() {
   delayLCD.expire();
@@ -270,15 +235,17 @@ void alarmeAtivando() {
   delayLedBlink.repeat();
   digitalWrite(ledAmarelo, HIGH);
 }
+
 /*Pre Alarme*/
 void alarmePreDisparado() {
   estado = PREALARME;
   delay_10s.expire();
   delay_10s.repeat();
 }
+
 /*Alarme Disparado*/
 void alarmeDisparado() {
-  //smsEnviado = smsSend(int smsEnviado);
+  smsEnviado = smsSend(smsEnviado);
   estado = DISPARADO;
   delayLCD.expire();
   delayLCD.repeat();
