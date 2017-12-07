@@ -1,8 +1,9 @@
 #include <Keypad.h>
+#include <Wire.h>
 
 bool digitandoSenha = false;
 String senhaDigitada;
-String senha = "1577";
+//char* senha = "1577";
 
 const byte ROWS = 4; //four rows
 const byte COLS = 3; //three columns
@@ -14,15 +15,16 @@ char keys[ROWS][COLS] = {
   {'*','0','#'}
 };
 
-byte rowPins[ROWS] = {5, 4, 3, A0};   //connect to the row pinouts of the keypad
+byte rowPins[ROWS] = {5, 4, 3, 2};   //connect to the row pinouts of the keypad
 byte colPins[COLS] = {8, 7, 6};       //connect to the column pinouts of the keypad
 
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
 void setup()
 {
+  Wire.begin();  
   Serial.begin(9600);
-  pinMode(A0, INPUT);
+  pinMode(2, INPUT);
 }
   
 void loop()
@@ -47,22 +49,29 @@ void loop()
     
     if (key == '#')
     {
+      char teste[10];
+      
       digitandoSenha = false;
       Serial.println("Senha Digitada...");
-      Serial.println("Senha: " + senhaDigitada);
+      Serial.print("Senha: ");
+      Serial.println(senhaDigitada);
 
-      if (senhaDigitada == senha)
-      {
-        Serial.println("");
-        Serial.println("Senha Correta");
-        Serial.println("Alarme Desativado");
-        Serial.println("");
-      }
-      else
-      {
-        Serial.println("ERROU");
-        Serial.println("");
+      senhaDigitada.toCharArray(teste, 10);
+
+      Serial.println(teste);
+      
+//      if (senhaDigitada == senha)
+//      {
+//        Serial.println("");
+//        Serial.println("Senha Correta");
+//        Serial.println("Alarme Desativado");
+//        Serial.println("");
+//      }
+//      else
+//      {
+//        Serial.println("ERROU");
+//        Serial.println("");
       }
     }
   }
-}
+

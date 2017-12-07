@@ -15,25 +15,8 @@ RestClient client = RestClient("192.168.3.186", 3000, ethclient);
 
 int smsEnviado;
 
-void smsSetup(){
-  parametros.concat(sid);
-
-  parametros.concat("&token=");
-  parametros.concat(token);
-
-  parametros.concat("&to=");
-  parametros.concat(to);
-
-  parametros.concat("&from=");
-  parametros.concat(from);
-
-  parametros.concat("&body=SUA CASA FOI INVADIDA");
-
-  Serial.println(parametros);
-
-}
-
-int smsSend(int smsEnviado){
+int smsSend(int smsEnviado)
+{
   if (smsEnviado == 0)
   {
     int statusCode = client.post("/sms", parametros.c_str(), &response);

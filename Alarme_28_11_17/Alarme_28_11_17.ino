@@ -1,6 +1,5 @@
 #include <AsyncDelay.h>
 #include <LiquidCrystal.h>
-//#include <utility/logging.h>
 #include "Teclado.h"
 #include "sms.h"
 
@@ -39,7 +38,8 @@ const byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xF1, 0x21 };
 
 char aux[1] = {'.'};
 
-void setup() {
+void setup() 
+{
   Serial.begin(9600);
 
   pinMode(receptor, INPUT);
@@ -62,7 +62,7 @@ void setup() {
   }
   else
   {
-    Serial.print("erro        ");
+    Serial.println("Erro ao Conectar");
     escreveLCD("Erro ao ", "Conectar");
     delay(1000);
   }
@@ -86,32 +86,42 @@ void setup() {
   Serial.println(parametros);
 }
 
-void loop() {
+void loop() 
+{
   char key = keypad.getKey();
+  
   valorSensor = digitalRead(receptor);
+  
   int flag1;
   boolean flag2 = false;
 
-  switch (estado) {
+  switch (estado) 
+  {
     case ATIVADO:
-      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) {
+      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) 
+      {
         alarmeDesativado();
       }
-      if (valorSensor == 1) {
+      if (valorSensor == 1) 
+      {
         alarmePreDisparado();
       }
       break;
       
     case ATIVANDO:
       flag1 = verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha);
-      if (flag1 == 2) {
+      if (flag1 == 2) 
+      {
         flag2 = true;
       }
 
-      if (flag1 == 3) {
+      if (flag1 == 3) 
+      {
         alarmeDesativado();
       }
-      if (!flag2 && delayLedBlink.isExpired()) {
+      
+      if (!flag2 && delayLedBlink.isExpired()) 
+      {
         delayLCD.expire();
         delayLCD.repeat();
         digitalWrite(Luz_Fundo, HIGH);
@@ -122,45 +132,53 @@ void loop() {
         else
           aux[0] = '.';
       }
-      if (delayLedBlink.isExpired()) {
+      if (delayLedBlink.isExpired()) 
+      {
         digitalWrite(ledAmarelo, !digitalRead(ledAmarelo));
         delayLedBlink.repeat();
       }
-      if (delay_10s.isExpired()) {
+      if (delay_10s.isExpired()) 
+      {
         alarmeAtivado();
       }
       break;
 
     case DESATIVADO:
-      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) {
+      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) 
+      {
         alarmeAtivando();
         flag2 = false;
       }
       break;
     
     case PREALARME:
-      if (delay_10s.isExpired()) {
+      if (delay_10s.isExpired()) 
+      {
         alarmeDisparado();
         Serial.println(F("Executou função alarmeDisparado()"));
       }
-      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) {
+      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) 
+      {
         alarmeDesativado();
       }
       break;
     
     case DISPARADO:
 
-      if (delayLedBlink.isExpired()) {
+      if (delayLedBlink.isExpired()) 
+      {
         digitalWrite(ledVerde, !digitalRead(ledVerde));
         digitalWrite(ledAmarelo, !digitalRead(ledVerde));
         delayLedBlink.repeat();
       }
-      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) {
+      if (verificaSenha(key, &digitandoSenha, &senhaDigitada, &senha) == 3) 
+      {
         alarmeDesativado();
       }
       break;
   }
-  if (delayLCD.isExpired()) {
+  if (delayLCD.isExpired()) 
+  {
     digitalWrite(Luz_Fundo, LOW);
     lcd.clear();
   }
@@ -169,13 +187,16 @@ void loop() {
 ////////////////////////////
 //FUNÇÕES
 ///////////////////////////
-boolean estadoPorta() {
-  if (valorSensor == 1 ) {
+boolean estadoPorta() 
+{
+  if (valorSensor == 1 ) 
+  {
     Serial.println(F("Porta Aberta"));
     delay(1000);
     return true;
   }
-  else {
+  else 
+  {
     Serial.println(F("Porta Fechada"));
     delay(1000);
     return false;
@@ -183,20 +204,8 @@ boolean estadoPorta() {
 }
 
 /*Alarme desativado*/
-void identificaInvasao(boolean estadoPorta, boolean estadoAlarme) {
-
-  /*Porta aberta e alarme ativado*/
-  if (estadoPorta == true && estadoAlarme == true) {
-    Serial.println(F("Fomos invadidos"));
-  }
-  /*Porta aberta e alarme desativado*/
-  if (estadoPorta == true && estadoAlarme == false) {
-    Serial.println(F("Entrada autorizada"));
-  }
-}
-
-/*Alarme desativado*/
-void alarmeDesativado() {
+void alarmeDesativado() 
+{
   delayLCD.expire();
   delayLCD.repeat();
   digitalWrite(Luz_Fundo, HIGH);
@@ -210,7 +219,8 @@ void alarmeDesativado() {
 }
 
 /*Alarme Ativado*/
-void alarmeAtivado() {
+void alarmeAtivado() 
+{
   estado = ATIVADO;
   delayLCD.expire();
   delayLCD.repeat();
@@ -222,7 +232,8 @@ void alarmeAtivado() {
 }
 
 /*Alarme Ativando*/
-void alarmeAtivando() {
+void alarmeAtivando() 
+{
   delayLCD.expire();
   delayLCD.repeat();
   digitalWrite(Luz_Fundo, HIGH);
@@ -237,14 +248,16 @@ void alarmeAtivando() {
 }
 
 /*Pre Alarme*/
-void alarmePreDisparado() {
+void alarmePreDisparado() 
+{
   estado = PREALARME;
   delay_10s.expire();
   delay_10s.repeat();
 }
 
 /*Alarme Disparado*/
-void alarmeDisparado() {
+void alarmeDisparado() 
+{
   smsEnviado = smsSend(smsEnviado);
   estado = DISPARADO;
   delayLCD.expire();
@@ -256,13 +269,15 @@ void alarmeDisparado() {
   digitalWrite(ledAmarelo, HIGH);
   delayLedBlink.expire();
   delayLedBlink.repeat();
-  tone(buzzer, 7000);
- 
+  tone(buzzer, 7000); 
 }
-int verificaSenha(char key, boolean *digitandoSenha, String *senhaDigitada, String *senha) {
 
-  if (key) {
-    if (key == '*') {
+int verificaSenha(char key, boolean *digitandoSenha, String *senhaDigitada, String *senha) 
+{
+  if (key) 
+  {
+    if (key == '*') 
+    {
       (*senhaDigitada) = "";
       (*digitandoSenha) = true;
       delayLCD.expire();
@@ -272,13 +287,16 @@ int verificaSenha(char key, boolean *digitandoSenha, String *senhaDigitada, Stri
       Serial.println(F("digitando senha...."));
       return 1;
     }
-    if (key == '#' && (*digitandoSenha)) {
+    if (key == '#' && (*digitandoSenha)) 
+    {
       int aux = 0;
       Serial.println(F("Finalizou senha"));
-      if ((*senhaDigitada) == (*senha)) {
+      if ((*senhaDigitada) == (*senha)) 
+      {
         aux = 3;
       }
-      else {
+      else 
+      {
         delayLCD.expire();
         delayLCD.repeat();
         digitalWrite(Luz_Fundo, HIGH);
@@ -290,8 +308,10 @@ int verificaSenha(char key, boolean *digitandoSenha, String *senhaDigitada, Stri
       (*digitandoSenha) = false;
       return aux;
     }
-    if (*digitandoSenha) {
-      if (*senhaDigitada == "") {
+    if (*digitandoSenha) 
+    {
+      if (*senhaDigitada == "") 
+      {
         delayLCD.expire();
         delayLCD.repeat();
         digitalWrite(Luz_Fundo, HIGH);
@@ -299,7 +319,8 @@ int verificaSenha(char key, boolean *digitandoSenha, String *senhaDigitada, Stri
         lcd.setCursor(0, 0);
         lcd.print("*");
       }
-      else {
+      else 
+      {
         delayLCD.expire();
         delayLCD.repeat();
         digitalWrite(Luz_Fundo, HIGH);
@@ -313,7 +334,8 @@ int verificaSenha(char key, boolean *digitandoSenha, String *senhaDigitada, Stri
   return 0;
 }
 
-void escreveLCD(char *linha1, char *linha2) {
+void escreveLCD(char *linha1, char *linha2) 
+{
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(linha1);
